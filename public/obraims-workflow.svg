@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Obraims workflow preview</title>
+  <desc id="desc">A simplified lending workflow from application intake to AI review and officer decision.</desc>
+  <rect width="960" height="420" fill="#F7F8FA"/>
+  <rect x="48" y="52" width="864" height="316" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <rect x="86" y="96" width="188" height="228" rx="8" fill="#17202A"/>
+  <text x="116" y="138" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="700">Borrower</text>
+  <rect x="116" y="172" width="128" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="116" y="204" width="96" height="14" rx="7" fill="#CBD5E1"/>
+  <rect x="116" y="236" width="118" height="14" rx="7" fill="#CBD5E1"/>
+  <rect x="116" y="280" width="112" height="34" rx="6" fill="#0F766E"/>
+  <text x="132" y="302" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="13" font-weight="700">Submit</text>
+  <path d="M306 210H382" stroke="#0F766E" stroke-width="5" stroke-linecap="round"/>
+  <path d="M372 195L391 210L372 225" fill="none" stroke="#0F766E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="414" y="96" width="178" height="228" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="444" y="138" fill="#17202A" font-family="Arial, sans-serif" font-size="22" font-weight="700">Documents</text>
+  <rect x="444" y="168" width="118" height="46" rx="6" fill="#F7F8FA" stroke="#DDE3EA"/>
+  <rect x="444" y="228" width="118" height="46" rx="6" fill="#F7F8FA" stroke="#DDE3EA"/>
+  <circle cx="546" cy="191" r="8" fill="#0F766E"/>
+  <circle cx="546" cy="251" r="8" fill="#B7791F"/>
+  <path d="M624 210H700" stroke="#0F766E" stroke-width="5" stroke-linecap="round"/>
+  <path d="M690 195L709 210L690 225" fill="none" stroke="#0F766E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="732" y="96" width="142" height="228" rx="8" fill="#FFFFFF" stroke="#DDE3EA"/>
+  <text x="762" y="138" fill="#17202A" font-family="Arial, sans-serif" font-size="22" font-weight="700">Review</text>
+  <circle cx="804" cy="196" r="42" fill="#FFF7ED" stroke="#FDBA74" stroke-width="10"/>
+  <path d="M804 154A42 42 0 0 1 846 196" fill="none" stroke="#C2410C" stroke-width="10" stroke-linecap="round"/>
+  <rect x="762" y="268" width="82" height="34" rx="6" fill="#17202A"/>
+  <text x="781" y="290" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="13" font-weight="700">Decide</text>
+</svg>

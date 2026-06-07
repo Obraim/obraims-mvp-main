@@ -1,0 +1,351 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  BORROWER
+  LOAN_OFFICER
+  CREDIT_ANALYST
+  ADMIN
+}
+
+enum BorrowerType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+enum LoanType {
+  BUSINESS_LOAN
+  PERSONAL_LOAN
+  MORTGAGE
+  WORKING_CAPITAL
+  EQUIPMENT_FINANCE
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  MORE_INFO_NEEDED
+  APPROVED
+  REJECTED
+}
+
+enum DocumentType {
+  ID
+  BANK_STATEMENT
+  FINANCIAL_STATEMENT
+  TAX_RETURN
+  BUSINESS_REGISTRATION
+  COLLATERAL_DOCUMENT
+  CONTRACT
+  OTHER
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum AiAnalysisType {
+  SUMMARY
+  RISK_FLAGS
+  MISSING_DOCS
+  CREDIT_MEMO
+}
+
+enum AgentTaskType {
+  MISSING_DOCUMENT_ANALYSIS
+  BORROWER_FOLLOW_UP_DRAFT
+  INTERNAL_NOTE_DRAFT
+  OFFICER_APPROVAL_REQUEST
+}
+
+enum AgentTaskStatus {
+  PENDING
+  IN_PROGRESS
+  WAITING_FOR_APPROVAL
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum AgentActionType {
+  INSPECT_APPLICATION
+  COMPARE_REQUIRED_DOCUMENTS
+  GENERATE_CHECKLIST
+  DRAFT_BORROWER_MESSAGE
+  CREATE_INTERNAL_NOTE
+  CREATE_APPROVAL_REQUEST
+}
+
+enum ConversationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  TELEGRAM
+  IN_APP
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+  INTERNAL
+}
+
+enum MessageStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SENT
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String
+  passwordHash      String?
+  authProviderId    String?            @unique
+  role              UserRole
+  preferredLanguage String             @default("en") @map("preferred_language")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  borrowerProfile   BorrowerProfile?
+  assignedLoans     LoanApplication[]  @relation("AssignedOfficer")
+  uploadedDocuments Document[]         @relation("UploadedDocuments")
+  notes             ApplicationNote[]  @relation("ApplicationNotes")
+  statusChanges     StatusHistory[]    @relation("StatusChangedBy")
+  agentTasks        AgentTask[]         @relation("AgentTaskCreatedBy")
+  agentApprovals    AgentTask[]         @relation("AgentTaskApprovedBy")
+  agentActionLogs   AgentActionLog[]    @relation("AgentActionActor")
+  messages          Message[]           @relation("MessageAuthor")
+}
+
+model BorrowerProfile {
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  borrowerType       BorrowerType
+  legalName          String
+  registrationNumber String?
+  phone              String
+  address            String
+  industry           String?
+  annualRevenue      Decimal?          @db.Decimal(14, 2)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  loanApplications   LoanApplication[]
+  conversations      Conversation[]
+}
+
+model LoanApplication {
+  id                 String             @id @default(cuid())
+  borrowerProfileId  String
+  borrowerProfile    BorrowerProfile    @relation(fields: [borrowerProfileId], references: [id], onDelete: Cascade)
+  assignedOfficerId  String?
+  assignedOfficer    User?              @relation("AssignedOfficer", fields: [assignedOfficerId], references: [id])
+  applicationNumber  String             @unique
+  loanType           LoanType
+  requestedAmount    Decimal            @db.Decimal(14, 2)
+  currency           String             @default("USD")
+  requestedTermMonths Int
+  loanPurpose        String
+  status             ApplicationStatus  @default(DRAFT)
+  aiSummary          String?
+  aiRiskScore        Int?
+  aiRiskFlags        Json?
+  aiMissingDocuments Json?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  documents          Document[]
+  notes              ApplicationNote[]
+  statusHistory      StatusHistory[]
+  aiAnalyses         AiAnalysis[]
+  agentTasks         AgentTask[]
+  agentActionLogs    AgentActionLog[]
+  conversations      Conversation[]
+  checklists         MissingDocumentChecklist[]
+
+  @@index([borrowerProfileId])
+  @@index([assignedOfficerId])
+  @@index([status])
+}
+
+model AgentTask {
+  id                 String          @id @default(cuid())
+  loanApplicationId  String
+  loanApplication    LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  type               AgentTaskType
+  status             AgentTaskStatus @default(PENDING)
+  title              String
+  description        String?
+  input              Json?
+  output             Json?
+  createdById        String?
+  createdBy          User?           @relation("AgentTaskCreatedBy", fields: [createdById], references: [id])
+  approvedById       String?
+  approvedBy         User?           @relation("AgentTaskApprovedBy", fields: [approvedById], references: [id])
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  actionLogs         AgentActionLog[]
+
+  @@index([loanApplicationId])
+  @@index([status])
+  @@index([type])
+}
+
+model AgentActionLog {
+  id                 String          @id @default(cuid())
+  loanApplicationId  String
+  loanApplication    LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  agentTaskId        String?
+  agentTask          AgentTask?      @relation(fields: [agentTaskId], references: [id])
+  actionType         AgentActionType
+  actorId            String?
+  actor              User?           @relation("AgentActionActor", fields: [actorId], references: [id])
+  input              Json?
+  output             Json?
+  createdAt          DateTime        @default(now())
+
+  @@index([loanApplicationId])
+  @@index([agentTaskId])
+  @@index([actionType])
+}
+
+model Conversation {
+  id                 String              @id @default(cuid())
+  loanApplicationId  String
+  loanApplication    LoanApplication     @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  borrowerProfileId  String
+  borrowerProfile    BorrowerProfile     @relation(fields: [borrowerProfileId], references: [id], onDelete: Cascade)
+  channel            ConversationChannel
+  subject            String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  messages           Message[]
+
+  @@index([loanApplicationId])
+  @@index([borrowerProfileId])
+  @@index([channel])
+}
+
+model Message {
+  id              String           @id @default(cuid())
+  conversationId  String
+  conversation    Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorId        String?
+  author          User?            @relation("MessageAuthor", fields: [authorId], references: [id])
+  direction       MessageDirection
+  status          MessageStatus
+  subject         String?
+  body            String
+  createdAt       DateTime         @default(now())
+  approvedAt      DateTime?
+  sentAt          DateTime?
+
+  @@index([conversationId])
+  @@index([status])
+}
+
+model RequiredDocumentRule {
+  id           String       @id @default(cuid())
+  loanType     LoanType
+  borrowerType BorrowerType
+  documentType DocumentType
+  label        String
+  description  String?
+  isRequired   Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([loanType])
+  @@index([borrowerType])
+}
+
+model MissingDocumentChecklist {
+  id                 String          @id @default(cuid())
+  loanApplicationId  String
+  loanApplication    LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  requiredDocumentRuleId String?
+  documentType       DocumentType
+  label              String
+  isSatisfied        Boolean         @default(false)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([loanApplicationId])
+  @@index([documentType])
+}
+
+model Document {
+  id                String          @id @default(cuid())
+  loanApplicationId String
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  uploadedById      String
+  uploadedBy        User            @relation("UploadedDocuments", fields: [uploadedById], references: [id])
+  documentType      DocumentType
+  fileName          String
+  filePath          String
+  storageKey        String?
+  mimeType          String
+  fileSize          Int
+  extractedText     String?
+  status            DocumentStatus  @default(UPLOADED)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([loanApplicationId])
+  @@index([uploadedById])
+}
+
+model ApplicationNote {
+  id                String          @id @default(cuid())
+  loanApplicationId String
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  authorId          String
+  author            User            @relation("ApplicationNotes", fields: [authorId], references: [id])
+  content           String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([loanApplicationId])
+  @@index([authorId])
+}
+
+model StatusHistory {
+  id                String             @id @default(cuid())
+  loanApplicationId String
+  loanApplication   LoanApplication    @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  changedById       String
+  changedBy         User               @relation("StatusChangedBy", fields: [changedById], references: [id])
+  oldStatus         ApplicationStatus
+  newStatus         ApplicationStatus
+  comment           String?
+  createdAt         DateTime           @default(now())
+
+  @@index([loanApplicationId])
+  @@index([changedById])
+}
+
+model AiAnalysis {
+  id                String          @id @default(cuid())
+  loanApplicationId String
+  loanApplication   LoanApplication @relation(fields: [loanApplicationId], references: [id], onDelete: Cascade)
+  provider          String
+  model             String
+  analysisType      AiAnalysisType
+  inputSnapshot     Json
+  output            Json
+  createdAt         DateTime        @default(now())
+
+  @@index([loanApplicationId])
+  @@index([analysisType])
+}

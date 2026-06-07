@@ -1,0 +1,17 @@
+.env
+.env.local
+.next
+node_modules
+uploads
+coverage
+dist
+*.log
+tsconfig.tsbuildinfo
+.tools
+gh-cli.zip
+GitHubDesktopSetup-x64.exe
+.gh-*.json
+.next-dev.pid
+obraims-mvp-source.zip
+
+.vercel

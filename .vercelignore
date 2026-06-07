@@ -1,0 +1,17 @@
+.env
+.env.local
+.git
+.next
+.tools
+.npm-cache
+.npm-cache-vercel-noscripts
+node_modules
+uploads
+coverage
+dist
+*.log
+gh-cli.zip
+GitHubDesktopSetup-x64.exe
+obraims-mvp-source.zip
+.gh-*.json
+.next-dev.pid
